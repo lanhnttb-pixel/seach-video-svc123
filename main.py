@@ -950,7 +950,7 @@ def main():
 
     # Sidebar cho công cụ
     with st.sidebar:
-        st.title("🛠️ Công cụ Video - Liên Hệ Zalo : 0986234983")
+        st.title("🛠️ Công cụ Lồng Tiếng Đa Ngôn Ngữ Video ")
         
         # Tạo tabs cho các công cụ khác nhau
         # Nếu có auth_token từ desktop, mặc định chọn tab thanh toán
@@ -1489,6 +1489,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
