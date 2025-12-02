@@ -1,5 +1,5 @@
 import streamlit as st
-from googletrans import Translator
+# from googletrans import Translator  # Không dùng, đã xóa để tránh lỗi Python 3.13
 from PIL import Image
 import requests
 from io import BytesIO
