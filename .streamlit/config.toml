@@ -1,0 +1,18 @@
+[server]
+maxUploadSize = 10240  # 10GB = 10 * 1024MB
+enableXsrfProtection = false
+enableCORS = false
+port = 8501
+headless = true
+timeoutClient = 1800  # Tăng timeout lên 30 phút
+maxMessageSize = 1000  # Tăng kích thước tin nhắn tối đa
+
+[theme]
+primaryColor = "#1E88E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
