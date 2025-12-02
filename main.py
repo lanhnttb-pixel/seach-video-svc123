@@ -573,17 +573,26 @@ class GeminiTranslator:
             
         # Kiểm tra nếu không có API key
         if not self.api_key:
+            print("⚠️ Gemini API key chưa được set")
             return None
+        
+        # Map ngôn ngữ đích sang tên đầy đủ
+        lang_map = {
+            'zh-cn': 'tiếng Trung giản thể',
+            'zh': 'tiếng Trung giản thể',
+            'en': 'tiếng Anh',
+            'kr': 'tiếng Hàn',
+            'ko': 'tiếng Hàn',
+            'ja': 'tiếng Nhật',
+            'jp': 'tiếng Nhật',
+            'th': 'tiếng Thái',
+            'id': 'tiếng Indonesia'
+        }
+        
+        target_lang = lang_map.get(dest, dest)
             
-        # Điều chỉnh prompt dựa trên ngôn ngữ đích
-        if dest == 'zh-cn':
-            prompt = f"Dịch câu sau từ tiếng Việt sang tiếng Trung giản thể (chỉ trả về bản dịch, không giải thích): {text}"
-        elif dest == 'en':
-            prompt = f"Dịch câu sau từ tiếng Việt sang tiếng Anh (chỉ trả về bản dịch, không giải thích): {text}"
-        elif dest == 'kr':
-            prompt = f"Dịch câu sau từ tiếng Việt sang tiếng Hàn (chỉ trả về bản dịch, không giải thích): {text}"
-        else:
-            prompt = f"Dịch câu sau từ tiếng Việt sang {dest} (chỉ trả về bản dịch, không giải thích): {text}"
+        # Điều chỉnh prompt dựa trên ngôn ngữ đích - prompt rõ ràng hơn
+        prompt = f"Bạn là một dịch giả chuyên nghiệp. Hãy dịch từ khóa sau từ tiếng Việt sang {target_lang}. CHỈ trả về bản dịch, KHÔNG giải thích, KHÔNG thêm ký tự nào khác.\n\nTừ khóa: {text}\n\nBản dịch:"
         
         try:
             response = requests.post(
@@ -593,7 +602,8 @@ class GeminiTranslator:
                     "contents": [{
                         "parts":[{"text": prompt}]
                     }]
-                }
+                },
+                timeout=30  # Thêm timeout
             )
             
             if response.status_code == 200:
@@ -601,11 +611,40 @@ class GeminiTranslator:
                 if 'candidates' in result and len(result['candidates']) > 0:
                     translated_text = result['candidates'][0]['content']['parts'][0]['text']
                     # Loại bỏ các ký tự không cần thiết và khoảng trắng
-                    translated_text = translated_text.strip().strip('"').strip("'")
+                    translated_text = translated_text.strip().strip('"').strip("'").strip('。').strip('.').strip()
+                    
+                    # Kiểm tra nếu kết quả giống với input (có thể là lỗi)
+                    if translated_text.lower() == text.lower():
+                        print(f"⚠️ Translation result same as input for {dest}: {text}")
+                        return None
+                    
                     return translated_text
+                else:
+                    print(f"⚠️ No candidates in response for {dest}")
+                    return None
+            else:
+                # Xử lý lỗi từ API
+                error_detail = response.text
+                print(f"❌ API Error ({response.status_code}) for {dest}: {error_detail[:200]}")
+                
+                # Kiểm tra các lỗi phổ biến
+                if response.status_code == 400:
+                    error_json = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                    error_msg = error_json.get('error', {}).get('message', '')
+                    if 'API key' in error_msg or 'invalid' in error_msg.lower():
+                        print("❌ API key không hợp lệ")
+                    elif 'quota' in error_msg.lower() or 'limit' in error_msg.lower():
+                        print("❌ Đã vượt quá giới hạn API")
+                
+                return None
+        except requests.exceptions.Timeout:
+            print(f"⏱️ Timeout khi dịch sang {dest}")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Network error khi dịch sang {dest}: {str(e)}")
             return None
         except Exception as e:
-            print(f"Translation error: {str(e)}")
+            print(f"❌ Translation error cho {dest}: {str(e)}")
             return None
 
 class VideoSplitter:
@@ -1324,13 +1363,16 @@ def main():
                     translated_keywords = {}
                     translation_failed = False
                     
+                    failed_languages = []  # Lưu các ngôn ngữ dịch thất bại
+                    
                     for lang_code in selected_languages:
                         translated_keyword = translator.translate(keyword, src='vi', dest=lang_code)
-                        if translated_keyword:
+                        if translated_keyword and translated_keyword.strip():
                             translated_keywords[lang_code] = translated_keyword
                         else:
                             translation_failed = True
-                            translated_keywords[lang_code] = keyword
+                            failed_languages.append(available_languages.get(lang_code, lang_code))
+                            translated_keywords[lang_code] = keyword  # Dùng từ khóa gốc nếu dịch thất bại
                     
                     # Đảm bảo các ngôn ngữ cơ bản luôn có sẵn để sử dụng nếu cần
                     if 'en' not in translated_keywords:
@@ -1342,12 +1384,20 @@ def main():
                     
                     # Hiển thị cảnh báo nếu dịch thất bại
                     if translation_failed:
-                        st.warning("""
-                        ⚠️ Dịch thuật không thành công! Có thể do:
-                        - API key không hợp lệ hoặc đã hết hạn
-                        - Đã vượt quá giới hạn sử dụng API
+                        failed_langs_str = ", ".join(failed_languages) if failed_languages else "một số ngôn ngữ"
+                        st.warning(f"""
+                        ⚠️ **Dịch thuật không thành công cho {failed_langs_str}!** Có thể do:
                         
-                        Hãy thử mở mục "🔑 Cài đặt API Key Gemini" và đổi API key mới.
+                        - **API key không hợp lệ hoặc đã hết hạn** - Kiểm tra API key trong mục "🔑 Cài đặt API Key Gemini"
+                        - **Đã vượt quá giới hạn sử dụng API** - Gemini API có giới hạn request/ngày
+                        - **Lỗi kết nối** - Kiểm tra kết nối internet
+                        
+                        **Giải pháp:**
+                        1. Mở mục "🔑 Cài đặt API Key Gemini" ở sidebar
+                        2. Nhập API key mới từ [Google AI Studio](https://aistudio.google.com/app/apikey)
+                        3. Nhấn "💾 Lưu API Key" và thử lại
+                        
+                        *Lưu ý: Một số từ khóa có thể không dịch được do quá đặc biệt hoặc không có từ tương đương.*
                         """)
                     
                     # Hiển thị bản dịch
