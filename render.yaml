@@ -3,13 +3,21 @@ services:
     name: video-tools
     env: python
     buildCommand: chmod +x render-build.sh && ./render-build.sh
-    startCommand: streamlit run main.py
+    # Render yêu cầu bind với PORT từ env và address 0.0.0.0
+    # Nếu web khác bạn chỉ cần: streamlit run main.py
+    # Thì có thể thử: streamlit run main.py --server.port=$PORT
+    startCommand: streamlit run main.py --server.port=$PORT --server.address=0.0.0.0
     plan: standard
     envVars:
       - key: PYTHONUNBUFFERED
         value: "true"
-      - key: PORT
-        value: "8501"
+      # Render tự động set PORT, không cần khai báo
+      # Nhưng nếu cần có thể dùng fromService như dưới
+      # - key: PORT
+      #   fromService:
+      #     type: web
+      #     name: video-tools
+      #     property: port
       - key: STREAMLIT_SERVER_MAX_UPLOAD_SIZE
         value: "10240"
       - key: STREAMLIT_SERVER_TIMEOUT_CLIENT
