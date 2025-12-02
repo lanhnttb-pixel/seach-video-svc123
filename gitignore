@@ -1,0 +1,29 @@
+# Bỏ qua các file thực thi lớn
+*.exe
+ffmpeg.exe
+ffprobe.exe
+
+# Thư mục môi trường
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Thư mục WinPython
+WPy64-*/ 
+
+# Thư mục và file tạm
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.zip
+temp/
+tmp/
+*.tmp
+
+# Thư mục và file hệ thống
+.DS_Store
+Thumbs.db 
