@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: video-tools
+    env: python
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: streamlit run main.py
+    plan: standard
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: PORT
+        value: "8501"
+      - key: STREAMLIT_SERVER_MAX_UPLOAD_SIZE
+        value: "10240"
+      - key: STREAMLIT_SERVER_TIMEOUT_CLIENT
+        value: "1800"
+      - key: STREAMLIT_SERVER_MAX_MESSAGE_SIZE
+        value: "1000"
+      - key: FFMPEG_OPTIONS
+        value: "ultrafast"
+      # API Base URL
+      - key: API_BASE_URL
+        value: https://web-admin-srt212.onrender.com 
