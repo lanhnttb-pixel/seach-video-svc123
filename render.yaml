@@ -2,6 +2,7 @@ services:
   - type: web
     name: video-tools
     env: python
+    # Python version được chỉ định trong runtime.txt (3.12.7)
     buildCommand: chmod +x render-build.sh && ./render-build.sh
     # Render yêu cầu bind với PORT từ env và address 0.0.0.0
     # Nếu web khác bạn chỉ cần: streamlit run main.py
