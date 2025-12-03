@@ -1285,7 +1285,7 @@ def main():
         
         # Khởi tạo session state để lưu API key
         if 'gemini_api_key' not in st.session_state:
-            st.session_state.gemini_api_key = "AIzaSyCHyVRFSCB8m2muEBYhqShBXEd9H8hgmSQ"  # API key mặc định
+            st.session_state.gemini_api_key = "AIzaSyAxiF9GIkVYZBiZZ68J1V_2Oe_J2dieTvg"  # API key mặc định
         
         # Thêm phần nhập API key
         with st.expander("🔑 Cài đặt API Key Gemini", expanded=False):
@@ -1489,6 +1489,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
